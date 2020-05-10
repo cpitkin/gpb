@@ -1,41 +1,29 @@
-use quicli::prelude::*;
 use structopt::StructOpt;
-use std::thread;
-use std::path::Path;
 
-mod file_monitor;
+use gpba::Directories;
 
-/// GPB (Google Photos Backup CLI) - Convert Google Takeout files into something we can backup to Backblaze
+/// GPBA (Google Photos Backup Assistant) - Convert Google Takeout files into something we can easily backup to a service
 #[derive(Debug, StructOpt)]
-struct Cli {
-    // Add a positional argument that the user has to supply:
-    /// Path to a working directory
-    #[structopt(default_value = "./", long)]
-    path: String,
-    // Quick and easy logging setup you get for free with quicli
-    #[structopt(flatten)]
-    verbosity: Verbosity,
+struct Opt {
+    // The number of occurrences of the `v/verbose` flag
+    /// Verbose mode (-v, -vv, -vvv, etc.)
+    #[structopt(short, long, parse(from_occurrences))]
+    verbose: u8,
+
+    /// Create the directories to place your files in
+    #[structopt(short, long, parse(from_flag))]
+    create: bool,
+
+    /// Path to use as the working directory
+    #[structopt(name = "DIRECTORY", parse(from_str))]
+    directory: String,
 }
 
-fn main() -> CliResult {
-    let _args = Cli::from_args();
+fn main() {
+    let opt = Opt::from_args();
 
-    let full_watcher_path = format!("{}/zip_files", &_args.path);
-
-    println!("Please place your zip files here: {:?}", full_watcher_path);
-
-    let watch_dir = Path::new(&full_watcher_path);
-
-    let handle = thread::spawn(move || {
-
-        let file_name = file_monitor::watch_for_zip(watch_dir);
-        match file_name {
-            Ok(value) => println!("{:?}", value),
-            Err(e) => println!("{:?}", e)
-        }
-    });
-
-    handle.join().unwrap();
-
-    Ok(())
+    let directories: Directories = Directories::new(opt.directory);
+    let _created = Directories::create(&directories)
+        .expect("Something went wrong creating the directories");
+    println!("{:?}", directories)
 }
