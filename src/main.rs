@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use gpba::Directories;
+use gpba::*;
 
 /// GPBA (Google Photos Backup Assistant) - Convert Google Takeout files into something we can easily backup to a service
 #[derive(Debug, StructOpt)]
@@ -23,7 +23,14 @@ fn main() {
     let opt = Opt::from_args();
 
     let directories: Directories = Directories::new(opt.directory);
-    let _created = Directories::create(&directories)
+    if opt.create {
+        Directories::create(&directories)
         .expect("Something went wrong creating the directories");
-    println!("{:?}", directories)
+    }
+
+    let files = gpba::get_dir_files(&directories.compressed).unwrap();
+    // println!("{:?}", files);
+
+    gpba::unzip_files(files, directories).expect("Can't unzip the file.")
+
 }
