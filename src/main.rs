@@ -28,9 +28,16 @@ fn main() {
         .expect("Something went wrong creating the directories");
     }
 
-    let files = gpba::get_dir_files(&directories.compressed).unwrap();
-    // println!("{:?}", files);
+    let compressed_files = gpba::get_dir_files(&directories.compressed).unwrap();
 
-    gpba::unzip_files(files, directories).expect("Can't unzip the file.")
+    for compressed_file in compressed_files {
+        gpba::unzip_files(&compressed_file, &directories).expect("Can't unzip the file.");
+        let expanded_files = gpba::get_dir_files(&directories.expanded).unwrap();
 
+        for expanded_file in expanded_files {
+            gpba::merge(&directories, &expanded_file);
+            gpba::clean_up(&expanded_file, &compressed_file)
+                .expect("Failed to clean up files and directories!");
+        }
+    }
 }
