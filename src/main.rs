@@ -10,9 +10,13 @@ struct Opt {
     #[structopt(short, long, parse(from_occurrences))]
     verbose: u8,
 
-    /// Create the directories to place your files in
+    /// Setup a new directory structure for the CLI
     #[structopt(short, long, parse(from_flag))]
-    create: bool,
+    new: bool,
+
+    /// Keep the compressed (ZIP) and expanded files
+    #[structopt(short, long, parse(from_flag))]
+    keep: bool,
 
     /// Path to use as the working directory
     #[structopt(name = "DIRECTORY", parse(from_str))]
@@ -23,7 +27,7 @@ fn main() {
     let opt = Opt::from_args();
 
     let directories: Directories = Directories::new(opt.directory);
-    if opt.create {
+    if opt.new {
         Directories::create(&directories)
         .expect("Something went wrong creating the directories");
     }
@@ -31,13 +35,16 @@ fn main() {
     let compressed_files = gpba::get_dir_files(&directories.compressed).unwrap();
 
     for compressed_file in compressed_files {
-        gpba::unzip_files(&compressed_file, &directories).expect("Can't unzip the file.");
+        gpba::unzip_files(&compressed_file, &directories, &opt.verbose).expect("Can't unzip the file.");
         let expanded_files = gpba::get_dir_files(&directories.expanded).unwrap();
 
         for expanded_file in expanded_files {
-            gpba::merge(&directories, &expanded_file);
-            gpba::clean_up(&expanded_file, &compressed_file)
-                .expect("Failed to clean up files and directories!");
+            gpba::merge(&directories, &expanded_file, &opt.verbose);
+
+            if !opt.keep {
+                gpba::clean_up(&expanded_file, &compressed_file)
+                    .expect("Failed to clean up files and directories!");
+            }
         }
     }
 }

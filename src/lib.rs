@@ -3,6 +3,7 @@ use std::fs::{create_dir_all, read_dir};
 use std::fs;
 use std::path::{Path, PathBuf};
 use zip::*;
+use rusync::Syncer;
 
 #[derive(Debug)]
 pub struct Directories {
@@ -39,17 +40,12 @@ pub fn get_dir_files(dir: &str) -> io::Result<Vec<PathBuf>> {
         )
         .collect::<Result<Vec<_>, io::Error>>()?;
 
-    // The order in which `read_dir` returns entries is not guaranteed. If reproducible
-    // ordering is required the entries should be explicitly sorted.
-
     entries.sort();
-
-    // The entries have now been sorted by their path.
 
     Ok(entries)
 }
 
-pub fn unzip_files (file: &PathBuf, directories: &Directories) -> std::io::Result<()> {
+pub fn unzip_files (file: &PathBuf, directories: &Directories, verbose: &u8) -> std::io::Result<()> {
 
     let fname = std::path::Path::new(&file);
     let file = fs::File::open(&fname).unwrap();
@@ -63,16 +59,22 @@ pub fn unzip_files (file: &PathBuf, directories: &Directories) -> std::io::Resul
 
         {
             let comment = file.comment();
-            if !comment.is_empty() {
-                println!("File {} comment: {}", i, comment);
+            if verbose > &0 {
+                if !comment.is_empty() {
+                    println!("File {} comment: {}", i, comment);
+                }
             }
         }
 
         if (&*file.name()).ends_with('/') {
-            println!("File {} extracted to \"{}\"", i, outpath.as_path().display());
+            if verbose >= &1 {
+                println!("File {} extracted to \"{}\"", i, outpath.as_path().display());
+            }
             create_dir_all(&outpath).unwrap();
         } else {
-            println!("File {} extracted to \"{}\" ({} bytes)", i, outpath.as_path().display(), file.size());
+            if verbose >= &2 {
+                println!("File {} extracted to \"{}\" ({} bytes)", i, outpath.as_path().display(), file.size());
+            }
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
                     create_dir_all(&p).unwrap();
@@ -81,7 +83,6 @@ pub fn unzip_files (file: &PathBuf, directories: &Directories) -> std::io::Resul
 
             let mut outfile = fs::File::create(&outpath).unwrap();
 
-            println!("{:?}", outfile);
             io::copy(&mut file, &mut outfile).unwrap();
         }
 
@@ -99,7 +100,7 @@ pub fn unzip_files (file: &PathBuf, directories: &Directories) -> std::io::Resul
     Ok(())
 }
 
-pub fn merge (directories: &Directories, file: &PathBuf) {
+pub fn merge (directories: &Directories, file: &PathBuf, verbose: &u8) {
 
     let console_info = rusync::ConsoleProgressInfo::new();
 
@@ -108,17 +109,16 @@ pub fn merge (directories: &Directories, file: &PathBuf) {
     let source = std::path::Path::new(&file);
     let destination = std::path::Path::new(&directories.merged);
 
-    println!("SOURCE: {:?}", source);
-    println!("DESTINATION: {:?}", destination);
-
-    let syncer = rusync::Syncer::new(&source, &destination, options, Box::new(console_info));
+    let syncer = Syncer::new(&source, &destination, options, Box::new(console_info));
     let stats = syncer.sync();
     match stats {
         Err(err) => {
             eprintln!("Error when syncing: {}", err);
         }
         Ok(stats) => {
-            println!("Transfered {} files", stats.copied);
+            if verbose >= &2 {
+                println!("Transfered {} files", stats.copied);
+            }
         }
     }
 }
