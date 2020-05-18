@@ -10,10 +10,7 @@ Create your new directory structure using the `-n` flag with the directory name
 
 The file structure example is below.
 
-photos
-├── compressed
-├── expanded
-└── merged
+![directory_structure](./images/directory_structure.png)
 
 Put your downloaded compressed files in the compressed directory.
 
