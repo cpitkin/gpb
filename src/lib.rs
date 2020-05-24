@@ -123,11 +123,16 @@ pub fn merge (directories: &Directories, file: &PathBuf, verbose: &u8) {
     }
 }
 
-pub fn clean_up (expanded_file: &PathBuf, compressed_file: &PathBuf) -> std::io::Result<()> {
+pub fn clean_up_expanded (expanded_file: &PathBuf) -> std::io::Result<()> {
     fs::remove_dir_all(&expanded_file)?;
+    Ok(())
+}
+
+pub fn clean_up_compressed (compressed_file: &PathBuf) -> std::io::Result<()> {
     fs::remove_file(&compressed_file)?;
     Ok(())
 }
+
 
 #[cfg(test)]
 mod tests {

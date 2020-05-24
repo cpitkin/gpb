@@ -41,8 +41,12 @@ fn main() {
         for expanded_file in expanded_files {
             gpba::merge(&directories, &expanded_file, &opt.verbose);
 
+            gpba::clean_up_expanded(&expanded_file)
+                .expect("Failed to clean up files and directories!");
+
+
             if !opt.keep {
-                gpba::clean_up(&expanded_file, &compressed_file)
+                gpba::clean_up_compressed(&compressed_file)
                     .expect("Failed to clean up files and directories!");
             }
         }
