@@ -1,5 +1,7 @@
 # GPBA - Google Photos Backup Assistant
 
+![](https://github.com/cpitkin/gpba/workflows/Build/badge.svg)
+
 A Rust CLI to take photos downloaded from Google Takeout and get them optimized for backing up to a third-party service.
 
 This is a tool I built for myself so help with backing up my photos. If you want to make a feature request file an issue. I can't guarentee it will get done but PRs are always welcome.
