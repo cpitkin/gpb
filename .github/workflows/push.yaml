@@ -12,8 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install build tools
-      run: apt update && apt install -y build-essential
     - name: Get toolchain
       uses: actions-rs/toolchain@v1
       with:
