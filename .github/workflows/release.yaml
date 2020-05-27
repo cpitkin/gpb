@@ -19,14 +19,11 @@ jobs:
           toolchain: stable
 
       - name: Build x86_64 Linux
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
         run: cargo build --release --target x86_64-unknown-linux-gnu --verbose
       - name: Compress x86_64 Linux
         uses: montudor/action-zip@v0.1.0
         with:
-            args: zip -qq -r -j x86_64-linux README.md LICENSE target/x86_64-unknown-linux-gnu/release/gpba
+          args: zip -qq -r -j x86_64-linux README.md LICENSE target/x86_64-unknown-linux-gnu/release/gpba
 
       - name: Create Release
         id: create_release
